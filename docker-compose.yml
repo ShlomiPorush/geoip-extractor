@@ -3,12 +3,17 @@ services:
     container_name: geoip
     build:
       context: .
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
     volumes:
       - ./maxmind/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
       - ./maxmind/GeoLite2-ASN.mmdb:/app/GeoLite2-ASN.mmdb:ro
       - ./config/config.yaml:/app/config.yaml:ro
       - ./data:/app/output_ips
+      - ./logs:/logs/geoip
     environment:
       - OUTPUT_DIR=/app/output_ips
+      - "CRON_SCHEDULE=0 9 * * 6"
     tty: true
-    cpus: '3.0'
+    cpus: '4.0'
