@@ -19,11 +19,10 @@ This project extracts IP ranges and ASN (Autonomous System Numbers) data for all
 
 ## Prerequisites
 
-- Python 3.10 or later
+- Docker & Docker compose.
 - MaxMind GeoLite2 database files:
   - `GeoLite2-Country.mmdb`
   - `GeoLite2-ASN.mmdb`
-- Docker (optional, for containerized execution)
 
 ---
 
@@ -31,20 +30,15 @@ This project extracts IP ranges and ASN (Autonomous System Numbers) data for all
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/geoip-extractor.git
-   cd geoip-extractor
+   git clone https://git.mosesnet.net/shlomip/geoip.git
+   cd geoip
    ```
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Place the MaxMind database files in the project directory:
+2. Place the MaxMind database files in the `maxmind` directory:
    - `GeoLite2-Country.mmdb`
    - `GeoLite2-ASN.mmdb`
 
-4. Create or edit the `config.yaml` file:
+3. (optional) edit the `config/config.yaml` file:
    ```yaml
    global_asn_blacklist:
      - asn: 32934
@@ -59,6 +53,12 @@ This project extracts IP ranges and ASN (Autonomous System Numbers) data for all
 
 ### Local Execution
 
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
 Run the script:
 ```bash
 python script.py
@@ -66,15 +66,10 @@ python script.py
 
 ### Using Docker
 
-1. Build the Docker image:
-   ```bash
-   docker build -t geoip-extractor .
-   ```
-
-2. Run the container:
-   ```bash
-   docker run -v $(pwd):/app -e OUTPUT_DIR=/app/output_ips geoip-extractor
-   ```
+Build the Docker image:
+```bash
+docker compose up
+```
 
 ---
 
