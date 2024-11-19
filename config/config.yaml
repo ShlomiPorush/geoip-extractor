@@ -1,0 +1,29 @@
+global_asn_blacklist:
+  - asn: 32934
+    name: "Facebook"
+  - asn: 15169
+    name: "Google LLC"
+  - asn: 19527
+    name: "GOOGLE-2"
+  - asn: 396982
+    name: "GOOGLE-CLOUD-PLATFORM"
+  - asn: 8075
+    name: "MICROSOFT-CORP-MSN-AS-BLOCK"
+  - asn: 8069
+    name: "MICROSOFT-CORP-MSN-AS-BLOCK"
+  - asn: 714
+    name: "APPLE-ENGINEERING"
+  - asn: 16509
+    name: "AMAZON-02"
+  - asn: 14618
+    name: "AMAZON-AES"
+
+# IL:
+# US:
+# #   asn_blacklist:
+# #     - asn: 8075 # Microsoft
+# #     - asn: 15169 # Google LLC
+
+# FR: # France
+# UA: # Ukraine
+# BY: # Belarus

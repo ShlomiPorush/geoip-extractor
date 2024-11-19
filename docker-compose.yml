@@ -1,0 +1,16 @@
+services:
+  geoip-extractor:
+    container_name: geoip
+    build:
+      context: .
+    volumes:
+      - ./maxmind/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
+      - ./maxmind/GeoLite2-ASN.mmdb:/app/GeoLite2-ASN.mmdb:ro
+      - ./config/config.yaml:/app/config.yaml:ro
+      - ./data:/app/output_ips
+    environment:
+      - OUTPUT_DIR=/app/output_ips
+      # - TARGET_COUNTRIES=IL,US
+      # - ASN_BLACKLIST=15169,32934,8075,714
+    tty: true
+    cpus: '3.0'
