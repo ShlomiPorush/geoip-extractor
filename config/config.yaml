@@ -17,13 +17,4 @@ global_asn_blacklist:
     name: "AMAZON-02"
   - asn: 14618
     name: "AMAZON-AES"
-
-# IL:
-# US:
-# #   asn_blacklist:
-# #     - asn: 8075 # Microsoft
-# #     - asn: 15169 # Google LLC
-
-# FR: # France
-# UA: # Ukraine
-# BY: # Belarus
+    
