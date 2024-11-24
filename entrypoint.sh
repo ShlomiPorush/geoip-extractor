@@ -20,12 +20,15 @@ generate_log_filename() {
 
 # Create a cron job
 CRON_LOG_FILE=$(generate_log_filename)
-echo "$CRON_SCHEDULE echo \"\$(date '+%Y-%m-%d %H:%M:%S') - Starting scheduled run... Logs will be saved to $CRON_LOG_FILE\" >> /logs/geoip/geoip_container.log; python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d/geoip-cron
+echo "$CRON_SCHEDULE echo \"\$(date '+%Y-%m-%d %H:%M:%S') - Starting scheduled run... Logs will be saved to $CRON_LOG_FILE\" >> /logs/geoip/geoip_container.log; /usr/local/bin/python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d/geoip-cron
 
 # Apply the cron job
 chmod 0644 /etc/cron.d/geoip-cron
 crontab /etc/cron.d/geoip-cron
 
-# Start the cron service in the foreground
-echo "Starting periodic command scheduler: cron."
-cron -f
+# Start the cron service
+echo "Starting cron service..."
+service cron start
+
+# Keep the container alive
+tail -f /dev/null
