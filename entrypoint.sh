@@ -3,7 +3,7 @@
 # Check if CRON_SCHEDULE is set
 if [ -z "$CRON_SCHEDULE" ]; then
     echo "CRON_SCHEDULE not set. Running the script once and exiting..."
-    python /app/script.py
+    /usr/bin/python3 /app/script.py
     exit 0
 fi
 
@@ -21,7 +21,7 @@ generate_log_filename() {
 
 # Create a cron job
 CRON_LOG_FILE=$(generate_log_filename)
-echo "$CRON_SCHEDULE python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d/geoip-cron
+echo "$CRON_SCHEDULE /usr/bin/python3 /app/script.py >> /logs/geoip/geoip_\$(date '+%Y-%m-%d_%H-%M-%S').log 2>&1" > /etc/cron.d/geoip-cron
 
 # Apply the cron job
 chmod 0644 /etc/cron.d/geoip-cron
@@ -32,8 +32,8 @@ service cron start
 
 # Run the script immediately with unique log file
 IMMEDIATE_LOG_FILE=$(generate_log_filename)
-echo "Running the script immediately... Logs will be saved to $IMMEDIATE_LOG_FILE"
-python /app/script.py >> "$IMMEDIATE_LOG_FILE" 2>&1
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Running the script immediately..." >> /logs/geoip/geoip_container.log
+/usr/bin/python3 /app/script.py >> "$IMMEDIATE_LOG_FILE" 2>&1
 
 # Keep the container alive
 tail -f /dev/null
