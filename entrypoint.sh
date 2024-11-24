@@ -27,11 +27,13 @@ echo "$CRON_SCHEDULE python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d
 chmod 0644 /etc/cron.d/geoip-cron
 crontab /etc/cron.d/geoip-cron
 
+# Start the cron service in the background
+service cron start
+
 # Run the script immediately with unique log file
 IMMEDIATE_LOG_FILE=$(generate_log_filename)
 echo "Running the script immediately... Logs will be saved to $IMMEDIATE_LOG_FILE"
 python /app/script.py >> "$IMMEDIATE_LOG_FILE" 2>&1
 
-# Start cron in the foreground
-echo "Starting cron..."
-cron -f
+# Keep the container alive
+tail -f /dev/null
