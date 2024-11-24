@@ -21,7 +21,8 @@ generate_log_filename() {
 
 # Generate cron job
 CRON_LOG_FILE=$(generate_log_filename)
-echo "$CRON_SCHEDULE . /etc/environment; echo \"\$(date '+%Y-%m-%d %H:%M:%S') - Starting scheduled run... Logs will be saved to $CRON_LOG_FILE\" >> /logs/geoip/geoip_container.log; /usr/local/bin/python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d/geoip-cron
+#echo "$CRON_SCHEDULE . /etc/environment; echo \"\$(date '+%Y-%m-%d %H:%M:%S') - Starting scheduled run... Logs will be saved to $CRON_LOG_FILE\" >> /logs/geoip/geoip_container.log; /usr/local/bin/python /app/script.py >> $CRON_LOG_FILE 2>&1" > /etc/cron.d/geoip-cron
+echo "$CRON_SCHEDULE echo \"\$(date '+%Y-%m-%d %H:%M:%S') - Starting cron job\" >> /logs/geoip/debug.log; /usr/local/bin/python /app/script.py >> /logs/geoip/script.log 2>&1" > /etc/cron.d/geoip-cron
 
 # Set permissions and load cron
 chmod 0644 /etc/cron.d/geoip-cron
