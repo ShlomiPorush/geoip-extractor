@@ -15,6 +15,5 @@ services:
       - ./logs:/logs/geoip
     environment:
       - OUTPUT_DIR=/app/output_ips
-      - "CRON_SCHEDULE=0 9 * * 6"
     tty: true
     cpus: '4.0'
