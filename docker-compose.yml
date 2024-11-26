@@ -5,7 +5,6 @@ services:
       context: .
     security_opt:
       - no-new-privileges:true
-    restart: unless-stopped
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ./maxmind/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
