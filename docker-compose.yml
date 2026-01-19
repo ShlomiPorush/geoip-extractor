@@ -1,18 +1,13 @@
 services:
   geoip-extractor:
-    container_name: geoip
-    build:
-      context: .
-    security_opt:
-      - no-new-privileges:true
+    image: shlomip/geoip-extractor:latest
+    env_file:
+      - .env
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ./maxmind/GeoLite2-Country.mmdb:/app/GeoLite2-Country.mmdb:ro
-      - ./maxmind/GeoLite2-ASN.mmdb:/app/GeoLite2-ASN.mmdb:ro
-      - ./config/config.yaml:/app/config.yaml:ro
-      - ./data:/app/output_ips
+      - ./maxmind:/app/maxmind
+      - ./output:/app/output
+      - ./config:/app/config
       - ./logs:/logs/geoip
-    environment:
-      - OUTPUT_DIR=/app/output_ips
     tty: true
     cpus: '4.0'

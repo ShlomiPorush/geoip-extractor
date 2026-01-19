@@ -2,162 +2,96 @@
 
 This project extracts IP ranges and ASN (Autonomous System Numbers) data for all countries from MaxMind's GeoLite2 database. It organizes the data into per-country files with optional filtering based on a global ASN blacklist.
 
----
+It includes **automatic updates** for MaxMind databases and **Cron scheduling** for periodic execution.
 
 ## Features
 
-- Extracts IP ranges per country from MaxMind's `GeoLite2-Country.mmdb`.
-- Extracts ASN data per country from MaxMind's `GeoLite2-ASN.mmdb`.
-- Supports filtering by a global ASN blacklist (`config.yaml`).
-- Minimizes IP ranges using CIDR collapsing to reduce file size.
-- Utilizes multi-processing for better performance.
-- Outputs results into organized files:
-  - `<country_code>.txt`: Contains the country's IP ranges.
-  - `<country_code>_ASN.txt`: Contains the country's ASN details.
+- **Automated MaxMind Updates**: Checks if database files are older than 7 days and downloads fresh copies using your MaxMind License Key.
+- **Scheduled Extraction**: Runs automatically based on a configurable Cron schedule (default: weekly).
+- **Efficient Processing**: Minimizes IP ranges using CIDR collapsing and uses multi-processing for speed.
+- **Organization**: Outputs per-country IP ranges and ASN details.
+- **Filtering**: Supports a global ASN blacklist via `config.yaml` see example [config.yaml](config/config.yaml).
 
 ---
 
 ## Prerequisites
 
-- Docker & Docker compose.
-- MaxMind GeoLite2 database files:
-  - `GeoLite2-Country.mmdb`
-  - `GeoLite2-ASN.mmdb`
+- Docker & Docker Compose.
+- A MaxMind License Key.
+
+* [ ] Sign up for a free MaxMind account at [https://www.maxmind.com/](https://www.maxmind.com/)
+* [ ] Create a **License Key**
 
 ---
 
-## Installation
+## Installation & Usage
 
-1. Clone the repository:
-   ```bash
-   git clone https://git.mosesnet.net/shlomip/geoip.git
-   cd geoip
-   ```
-
-2. Place the MaxMind database files in the `maxmind` directory:
-   - `GeoLite2-Country.mmdb`
-   - `GeoLite2-ASN.mmdb`
-
-3. (optional) edit the `config/config.yaml` file:
+1. **Create `docker-compose.yml`:**
+   Create a file named `docker-compose.yml` with the following content:
    ```yaml
-   global_asn_blacklist:
-     - asn: 32934
-       name: "Facebook"
-     - asn: 15169
-       name: "Google LLC"
+   services:
+     geoip-extractor:
+       image: shlomip/geoip-extractor:latest
+       container_name: geoip-extractor
+       env_file:
+         - .env
+       volumes:
+         - /etc/localtime:/etc/localtime:ro
+         - ./maxmind:/app/maxmind
+         - ./output:/app/output
+         - ./config:/app/config
+         - ./logs:/logs/geoip
+       tty: true
    ```
 
----
+2. **Configure Environment:**
+   Create a `.env` file in the same directory:
+   ```ini
+   MAXMIND_LICENSE_KEY=your_actual_license_key
+   
+   # Optional: Change schedule (Default: Every Saturday at 3 AM)
+   CRON_SCHEDULE=0 3 * * 6
+   ```
 
-## Usage
+3. **(Optional) Global Blacklist:**
+   Create a `config/config.yaml` file to block specific ASNs (e.g., Facebook, Google) from the output.
+   ([View example config](config/config.yaml))
 
-### Local Execution
+4. **Run with Docker:**
+   ```bash
+   docker compose up -d
+   ```
 
-Install dependencies:
+   The container will:
+   - Validate your License Key.
+   - Download the latest MaxMind databases (if missing or old).
+   - Run the initial extraction immediately.
+   - Continue running in the background as per the Cron schedule.
 
-```bash
-pip install -r requirements.txt
-```
-
-Run the script:
-```bash
-python script.py
-```
-
-### Using Docker
-
-Build the Docker image:
-```bash
-docker compose up
-```
+5. **Check Logs:**
+   ```bash
+   docker logs -f geoip-extractor
+   ```
 
 ---
 
 ## Output Files
 
-The script generates two files per country:
+The extracted files are saved in the `output/` directory:
 
-1. `<country_code>.txt`:
-   - Contains the country's IP ranges.
-   - Example:
-     ```
-     # Country: US
-     # Generated on: 19/11/2024 14:00
-     # Global ASN Blacklist:
-     #   32934 - Facebook
-     #   15169 - Google LLC
-     # Subnets:
-     8.8.8.0/24
-     8.8.4.0/22
-     ```
+- `<country_code>.txt`: IP ranges (CIDR format).
+- `<country_code>_ASN.txt`: ASN details.
 
-2. `<country_code>_ASN.txt`:
-   - Contains ASN details for the country.
-   - Example:
-     ```
-     # Country: US
-     # Generated on: 19/11/2024 14:00
-     # ASN Details:
-     15169 - Google LLC
-     13335 - Cloudflare
-     ```
-
----
-
-## Configuration
-
-The script uses a YAML configuration file (`config.yaml`) for the global ASN blacklist:
-
-```yaml
-global_asn_blacklist:
-  - asn: 32934
-    name: "Facebook"
-  - asn: 15169
-    name: "Google LLC"
-  - asn: 8075
-    name: "Microsoft"
+Example `US.txt`:
+```
+# Country: US
+# Generated on: 19/01/2026 14:00
+# ...
+8.8.8.0/24
 ```
 
 ---
 
-## Performance Optimization
+## Credits
 
-- **Multi-processing**:
-  The script uses `ProcessPoolExecutor` to parallelize processing of `/8 blocks`. You can adjust the number of workers with:
-  ```python
-  with ProcessPoolExecutor(max_workers=4)
-  ```
-
-- **Resource Limits in Docker**:
-  To avoid overloading the server, use Docker resource limits:
-  ```bash
-  docker run --cpus="2.0" --memory="4g" geoip-extractor
-  ```
-
----
-
-## Troubleshooting
-
-- **Missing YAML dependency**:
-  Ensure `PyYAML` is installed by running:
-  ```bash
-  pip install PyYAML
-  ```
-
-- **Pickle errors in multiprocessing**:
-  Ensure there are no `lambda` functions or non-pickleable objects in the code.
-
-- **MaxMind database not found**:
-  Ensure `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb` are in the project directory.
-
----
-
-## License
-
-This project is licensed under the MIT License. See `LICENSE` for more details.
-
----
-
-## Acknowledgments
-
-- **MaxMind** for providing the GeoLite2 database.
+* **Location Data**: This product includes GeoLite2 data created by MaxMind, available from [https://www.maxmind.com](https://www.maxmind.com).

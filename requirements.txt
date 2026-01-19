@@ -1,3 +1,4 @@
 geoip2
 ipaddress
 pyyaml
+requests

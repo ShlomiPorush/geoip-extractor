@@ -7,23 +7,36 @@ from datetime import datetime
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 
+import maxmind_updater
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # Paths and configurations
-MMDB_COUNTRY_FILE = "GeoLite2-Country.mmdb"
-MMDB_ASN_FILE = "GeoLite2-ASN.mmdb"
-CONFIG_FILE = "config.yaml"
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_ips/")
+# Use a directory for maxmind files to keep them organized
+MAXMIND_DIR = os.getenv("MAXMIND_DIR", "maxmind")
+MMDB_COUNTRY_FILE = os.path.join(MAXMIND_DIR, "GeoLite2-Country.mmdb")
+MMDB_ASN_FILE = os.path.join(MAXMIND_DIR, "GeoLite2-ASN.mmdb")
+CONFIG_DIR = os.getenv("CONFIG_DIR", "config")
+CONFIG_FILE = os.path.join(CONFIG_DIR, "config.yaml")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output/")
 
 # Load configuration
-with open(CONFIG_FILE, "r") as config_file:
-    config = yaml.safe_load(config_file)
+config = {}
+if os.path.exists(CONFIG_FILE):
+    logging.info(f"Loading configuration from {CONFIG_FILE}...")
+    try:
+        with open(CONFIG_FILE, "r") as config_file:
+            config = yaml.safe_load(config_file) or {}
+    except Exception as e:
+        logging.error(f"Error loading configuration: {e}")
+else:
+    logging.info(f"Configuration file {CONFIG_FILE} not found. Using defaults.")
 
 # Load global ASN blacklist
 GLOBAL_ASN_BLACKLIST = config.get("global_asn_blacklist", [])
 if not GLOBAL_ASN_BLACKLIST:
-    logging.warning("Global ASN blacklist is empty. No filtering will be applied.")
+    logging.info("Global ASN blacklist is empty. No filtering will be applied.")
 
 # Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -79,6 +92,14 @@ def process_block(block_index):
 
 # Main processing function
 def main():
+    # Attempt to update databases first
+    license_key = os.getenv("MAXMIND_LICENSE_KEY")
+    if license_key:
+        logging.info("Checking for MaxMind database updates...")
+        maxmind_updater.update_databases(license_key, MAXMIND_DIR)
+    else:
+        logging.warning("MAXMIND_LICENSE_KEY not found. Skipping update check.")
+
     current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
     combined_subnets = defaultdict(list)
     combined_asn_set = defaultdict(nested_defaultdict)
