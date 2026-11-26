@@ -5,7 +5,6 @@ import tarfile
 import shutil
 from datetime import datetime, timedelta
 
-# Constants
 MAXMIND_VALIDATION_URL = "https://secret-scanning.maxmind.com/secrets/validate-license-key"
 DOWNLOAD_URL_TEMPLATE = "https://download.maxmind.com/app/geoip_download?edition_id={edition_id}&license_key={license_key}&suffix=tar.gz"
 
@@ -15,9 +14,6 @@ EDITION_IDS = {
 }
 
 def validate_license_key(license_key):
-    """
-    Validates the MaxMind license key using their validation API.
-    """
     logging.info("Validating MaxMind License Key...")
     try:
         response = requests.post(
@@ -41,9 +37,6 @@ def validate_license_key(license_key):
         return False
 
 def should_update(file_path):
-    """
-    Checks if the file exists and is older than 7 days.
-    """
     if not os.path.exists(file_path):
         logging.info(f"File {file_path} does not exist. Update required.")
         return True
@@ -59,9 +52,6 @@ def should_update(file_path):
     return False
 
 def download_database(edition_id, license_key, output_dir):
-    """
-    Downloads and extracts the database for the given edition ID.
-    """
     url = DOWNLOAD_URL_TEMPLATE.format(edition_id=edition_id, license_key=license_key)
     logging.info(f"Downloading {edition_id} from MaxMind...")
     
@@ -78,11 +68,9 @@ def download_database(edition_id, license_key, output_dir):
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
                 
-        # Extract
         logging.info(f"Extracting {edition_id}...")
         with tarfile.open(tar_path, "r:gz") as tar:
             
-            # Find the .mmdb file inside the tar (it's usually in a subdirectory)
             mmdb_member = None
             for member in tar.getmembers():
                 if member.name.endswith(".mmdb"):
@@ -98,7 +86,6 @@ def download_database(edition_id, license_key, output_dir):
             else:
                 logging.error(f"Could not find .mmdb file in {edition_id} archive.")
 
-        # Cleanup tar
         os.remove(tar_path)
         return True
         
@@ -107,17 +94,12 @@ def download_database(edition_id, license_key, output_dir):
         return False
 
 def update_databases(license_key, output_dir):
-    """
-    Main function to check and update databases.
-    """
     if not license_key:
         logging.warning("No MAXMIND_LICENSE_KEY provided. Skipping updates.")
         return
 
-    # Ensure output dir exists
     os.makedirs(output_dir, exist_ok=True)
     
-    # Check if we need updates
     country_path = os.path.join(output_dir, f"{EDITION_IDS['Country']}.mmdb")
     asn_path = os.path.join(output_dir, f"{EDITION_IDS['ASN']}.mmdb")
     
@@ -125,7 +107,6 @@ def update_databases(license_key, output_dir):
     needs_update_asn = should_update(asn_path)
     
     if needs_update_country or needs_update_asn:
-        # Validate key only if we actually need to download something
         if not validate_license_key(license_key):
             logging.error("Aborting updates due to invalid license key.")
             return

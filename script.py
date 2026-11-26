@@ -11,11 +11,8 @@ from concurrent.futures import ProcessPoolExecutor
 
 import maxmind_updater
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
-# Paths and configurations
-# Use a directory for maxmind files to keep them organized
 MAXMIND_DIR = os.getenv("MAXMIND_DIR", "maxmind")
 MMDB_COUNTRY_FILE = os.path.join(MAXMIND_DIR, "GeoLite2-Country.mmdb")
 MMDB_ASN_FILE = os.path.join(MAXMIND_DIR, "GeoLite2-ASN.mmdb")
@@ -24,7 +21,6 @@ CONFIG_FILE = os.path.join(CONFIG_DIR, "config.yaml")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output/")
 PROVIDER_OUTPUT_DIR = os.path.join(OUTPUT_DIR, "asn")
 
-# Load configuration
 config = {}
 if os.path.exists(CONFIG_FILE):
     logging.info(f"Loading configuration from {CONFIG_FILE}...")
@@ -36,23 +32,18 @@ if os.path.exists(CONFIG_FILE):
 else:
     logging.info(f"Configuration file {CONFIG_FILE} not found. Using defaults.")
 
-# Load global ASN blacklist
 GLOBAL_ASN_BLACKLIST = config.get("global_asn_blacklist", [])
 if not GLOBAL_ASN_BLACKLIST:
     logging.info("Global ASN blacklist is empty. No filtering will be applied.")
 
-# Create output directory
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# Function to format ASN details for comments
 def format_asn_list(asn_list):
     return [f"#   {asn['asn']} - {asn.get('name', 'Unknown')}" for asn in asn_list]
 
-# Define a nested defaultdict structure for ASN sets
 def nested_defaultdict():
     return defaultdict(set)
 
-# Function to process a single /8 block
 def process_block(block_index):
     subnets = defaultdict(list)
     asn_set = defaultdict(nested_defaultdict)
@@ -62,27 +53,21 @@ def process_block(block_index):
         with geoip2.database.Reader(MMDB_COUNTRY_FILE) as country_reader, geoip2.database.Reader(MMDB_ASN_FILE) as asn_reader:
             for subnet in ip_block.subnets(new_prefix=24):
                 try:
-                    # Get country information
                     country_response = country_reader.country(subnet.network_address.exploded)
                     country_code = country_response.country.iso_code
 
-                    # Skip if country code is missing
                     if not country_code:
                         continue
 
-                    # Get ASN information
                     asn_response = asn_reader.asn(subnet.network_address.exploded)
                     asn_number = asn_response.autonomous_system_number
                     asn_name = asn_response.autonomous_system_organization
 
-                    # Skip IPs with blacklisted ASN
                     if any(asn_number == asn["asn"] for asn in GLOBAL_ASN_BLACKLIST):
                         continue
 
-                    # Add subnet to the country's list
                     subnets[country_code].append(str(subnet))
 
-                    # Add ASN details to the country's ASN list
                     asn_set[country_code][asn_number].add(asn_name)
 
                 except geoip2.errors.AddressNotFoundError:
@@ -98,10 +83,8 @@ def log_progress(step, done, total):
     if done == total or percent // 10 != previous_percent // 10:
         logging.info(f"{step}: {percent}% ({done}/{total})")
 
-# Main processing function
 def main():
     started_at = datetime.now()
-    # Attempt to update databases first
     license_key = os.getenv("MAXMIND_LICENSE_KEY")
     if license_key:
         logging.info("Checking for MaxMind database updates...")
@@ -124,7 +107,7 @@ def main():
 
     block_count = 256
     logging.info(f"Step 1/3 Scanning IP blocks: started ({block_count} blocks)")
-    with ProcessPoolExecutor(max_workers=4) as executor:  # Adjust max_workers to control CPU usage
+    with ProcessPoolExecutor(max_workers=4) as executor:
         for done, (subnets, asn_set) in enumerate(executor.map(process_block, range(block_count)), start=1):
             for country_code, subnet_list in subnets.items():
                 combined_subnets[country_code].extend(subnet_list)
@@ -136,10 +119,8 @@ def main():
     country_count = len(combined_subnets)
     logging.info(f"Step 2/3 Writing country files: started ({country_count} countries)")
     for done, (country_code, subnets) in enumerate(combined_subnets.items(), start=1):
-        # Collapse subnets to minimize the number of lines
         collapsed_subnets = list(ipaddress.collapse_addresses([ipaddress.IPv4Network(subnet) for subnet in subnets]))
 
-        # Write subnets to file
         subnet_file = os.path.join(OUTPUT_DIR, f"{country_code}.txt")
         with open(subnet_file, "w") as file:
             file.write(f"# Country: {country_code}\n")
@@ -149,7 +130,6 @@ def main():
             file.write("# Subnets:\n")
             file.write("\n".join(map(str, collapsed_subnets)))
 
-        # Write ASN details to file
         asn_file = os.path.join(OUTPUT_DIR, f"{country_code}_ASN.txt")
         with open(asn_file, "w") as file:
             file.write(f"# Country: {country_code}\n")
