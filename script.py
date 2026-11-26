@@ -53,7 +53,6 @@ def nested_defaultdict():
 
 # Function to process a single /8 block
 def process_block(block_index):
-    logging.info(f"Processing block {block_index}.0.0.0/8...")
     subnets = defaultdict(list)
     asn_set = defaultdict(nested_defaultdict)
 
@@ -92,8 +91,15 @@ def process_block(block_index):
         logging.error(f"Error processing block {block_index}: {e}")
     return subnets, asn_set
 
+def log_progress(step, done, total):
+    percent = done * 100 // total
+    previous_percent = (done - 1) * 100 // total
+    if done == total or percent // 10 != previous_percent // 10:
+        logging.info(f"{step}: {percent}% ({done}/{total})")
+
 # Main processing function
 def main():
+    started_at = datetime.now()
     # Attempt to update databases first
     license_key = os.getenv("MAXMIND_LICENSE_KEY")
     if license_key:
@@ -106,23 +112,20 @@ def main():
     combined_subnets = defaultdict(list)
     combined_asn_set = defaultdict(nested_defaultdict)
 
-    # Process all /8 blocks in parallel
-    logging.info("Starting parallel processing...")
+    block_count = 256
+    logging.info(f"Step 1/3 Scanning IP blocks: started ({block_count} blocks)")
     with ProcessPoolExecutor(max_workers=4) as executor:  # Adjust max_workers to control CPU usage
-        results = executor.map(process_block, range(256))
+        for done, (subnets, asn_set) in enumerate(executor.map(process_block, range(block_count)), start=1):
+            for country_code, subnet_list in subnets.items():
+                combined_subnets[country_code].extend(subnet_list)
+            for country_code, asn_map in asn_set.items():
+                for asn_number, names in asn_map.items():
+                    combined_asn_set[country_code][asn_number].update(names)
+            log_progress("Step 1/3 Scanning IP blocks", done, block_count)
 
-    # Combine results from all blocks
-    for subnets, asn_set in results:
-        for country_code, subnet_list in subnets.items():
-            combined_subnets[country_code].extend(subnet_list)
-        for country_code, asn_map in asn_set.items():
-            for asn_number, names in asn_map.items():
-                combined_asn_set[country_code][asn_number].update(names)
-
-    # Write results to files
-    for country_code, subnets in combined_subnets.items():
-        logging.info(f"Saving data for country: {country_code}")
-
+    country_count = len(combined_subnets)
+    logging.info(f"Step 2/3 Writing country files: started ({country_count} countries)")
+    for done, (country_code, subnets) in enumerate(combined_subnets.items(), start=1):
         # Collapse subnets to minimize the number of lines
         collapsed_subnets = list(ipaddress.collapse_addresses([ipaddress.IPv4Network(subnet) for subnet in subnets]))
 
@@ -146,12 +149,14 @@ def main():
                 for name in names:
                     file.write(f"{asn_number} - {name}\n")
 
+        log_progress("Step 2/3 Writing country files", done, country_count)
+
     export_providers(current_date)
 
-    logging.info("Task completed successfully.")
+    elapsed = str(datetime.now() - started_at).split(".")[0]
+    logging.info(f"Task completed successfully in {elapsed}.")
 
 def export_providers(generated_on):
-    logging.info("Exporting IP ranges per provider (ASN)...")
     provider_networks = defaultdict(list)
     provider_names = {}
 
@@ -165,8 +170,10 @@ def export_providers(generated_on):
             provider_networks[asn_number].append(network)
             provider_names[asn_number] = record.get("autonomous_system_organization") or "Unknown"
 
+    provider_count = len(provider_networks)
+    logging.info(f"Step 3/3 Writing provider files: started ({provider_count} providers)")
     os.makedirs(PROVIDER_OUTPUT_DIR, exist_ok=True)
-    for asn_number, networks in provider_networks.items():
+    for done, (asn_number, networks) in enumerate(provider_networks.items(), start=1):
         collapsed_networks = ipaddress.collapse_addresses(networks)
         provider_file = os.path.join(PROVIDER_OUTPUT_DIR, f"AS{asn_number}.txt")
         with open(provider_file, "w", encoding="utf-8") as file:
@@ -175,8 +182,7 @@ def export_providers(generated_on):
             file.write(f"# Generated on: {generated_on}\n")
             file.write("# Subnets:\n")
             file.write("\n".join(map(str, collapsed_networks)) + "\n")
-
-    logging.info(f"Saved {len(provider_networks)} provider files to {PROVIDER_OUTPUT_DIR}")
+        log_progress("Step 3/3 Writing provider files", done, provider_count)
 
 if __name__ == "__main__":
     main()
