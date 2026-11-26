@@ -8,7 +8,7 @@
 | `CRON_SCHEDULE` | `0 3 * * 6` | Cron expression for scheduled runs. The default is every Saturday at 03:00. |
 | `MAXMIND_DIR` | `/app/maxmind` | Directory of `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb`. |
 | `CONFIG_DIR` | `/app/config` | Directory of `config.yaml`. |
-| `OUTPUT_DIR` | `output/` | Directory for the output files. Relative paths start at `/app`. |
+| `OUTPUT_DIR` | `output/` | Directory for the output files. |
 
 ## Database updates
 
@@ -30,4 +30,4 @@ The blacklist does not apply to the provider files in `asn/`. See the [example c
 
 ## Logs
 
-When the container starts, it creates `/logs/geoip/geoip_<date>_<time>.log`. The first run and every scheduled run write to this file until the container restarts. `docker logs` shows the same lines.
+When the container starts, it creates `/logs/geoip/geoip_<date>_<time>.log`. The first run and every scheduled run write to this file until the container restarts. `docker logs` shows scheduled runs as they happen, and only the end of the first run, after it finishes.

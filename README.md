@@ -61,7 +61,7 @@ The error names the missing files. Set a valid `MAXMIND_LICENSE_KEY` so the cont
 The country files leave out the providers on the global ASN blacklist. They also sample one address per /24 block, so a small range can be missing from them. The provider files use the exact ranges from the ASN database.
 
 **How do I follow a run?**
-Run `docker logs -f geoip-extractor`. Each of the three steps logs its progress every 10%, and the last line gives the total run time.
+Run `tail -f` on the newest file in `logs/`. Each of the three steps logs its progress every 10%, and the last line gives the total run time. `docker logs -f geoip-extractor` also shows scheduled runs, but it shows the first run only after it finishes.
 
 ## Documentation
 
