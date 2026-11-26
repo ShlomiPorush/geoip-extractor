@@ -9,7 +9,7 @@ It includes **automatic updates** for MaxMind databases and **Cron scheduling** 
 - **Automated MaxMind Updates**: Checks if database files are older than 7 days and downloads fresh copies using your MaxMind License Key.
 - **Scheduled Extraction**: Runs automatically based on a configurable Cron schedule (default: weekly).
 - **Efficient Processing**: Minimizes IP ranges using CIDR collapsing and uses multi-processing for speed.
-- **Organization**: Outputs per-country IP ranges and ASN details.
+- **Organization**: Outputs per-country IP ranges and ASN details, plus per-provider (ASN) IP ranges.
 - **Filtering**: Supports a global ASN blacklist via `config.yaml` see example [config.yaml](config/config.yaml).
 
 ---
@@ -81,6 +81,7 @@ The extracted files are saved in the `output/` directory:
 
 - `<country_code>.txt`: IP ranges (CIDR format).
 - `<country_code>_ASN.txt`: ASN details.
+- `asn/AS<number>.txt`: all IP ranges of one provider (ASN), in CIDR format. The global ASN blacklist does not apply to these files.
 
 Example `US.txt`:
 ```
