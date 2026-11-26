@@ -22,6 +22,8 @@ ENV MAXMIND_DIR=/app/maxmind
 RUN mkdir -p /app/config
 ENV CONFIG_DIR=/app/config
 
+ENV OUTPUT_DIR=/app/output
+
 # Add the entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN dos2unix /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
