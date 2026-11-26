@@ -48,33 +48,29 @@ def process_block(block_index):
     subnets = defaultdict(list)
     asn_set = defaultdict(nested_defaultdict)
 
-    try:
-        ip_block = ipaddress.IPv4Network(f"{block_index}.0.0.0/8")
-        with geoip2.database.Reader(MMDB_COUNTRY_FILE) as country_reader, geoip2.database.Reader(MMDB_ASN_FILE) as asn_reader:
-            for subnet in ip_block.subnets(new_prefix=24):
-                try:
-                    country_response = country_reader.country(subnet.network_address.exploded)
-                    country_code = country_response.country.iso_code
+    ip_block = ipaddress.IPv4Network(f"{block_index}.0.0.0/8")
+    with geoip2.database.Reader(MMDB_COUNTRY_FILE) as country_reader, geoip2.database.Reader(MMDB_ASN_FILE) as asn_reader:
+        for subnet in ip_block.subnets(new_prefix=24):
+            try:
+                country_response = country_reader.country(subnet.network_address.exploded)
+                country_code = country_response.country.iso_code
 
-                    if not country_code:
-                        continue
-
-                    asn_response = asn_reader.asn(subnet.network_address.exploded)
-                    asn_number = asn_response.autonomous_system_number
-                    asn_name = asn_response.autonomous_system_organization
-
-                    if any(asn_number == asn["asn"] for asn in GLOBAL_ASN_BLACKLIST):
-                        continue
-
-                    subnets[country_code].append(str(subnet))
-
-                    asn_set[country_code][asn_number].add(asn_name)
-
-                except geoip2.errors.AddressNotFoundError:
+                if not country_code:
                     continue
 
-    except Exception as e:
-        logging.error(f"Error processing block {block_index}: {e}")
+                asn_response = asn_reader.asn(subnet.network_address.exploded)
+                asn_number = asn_response.autonomous_system_number
+                asn_name = asn_response.autonomous_system_organization
+
+                if any(asn_number == asn["asn"] for asn in GLOBAL_ASN_BLACKLIST):
+                    continue
+
+                subnets[country_code].append(str(subnet))
+                asn_set[country_code][asn_number].add(asn_name)
+
+            except geoip2.errors.AddressNotFoundError:
+                continue
+
     return subnets, asn_set
 
 def log_progress(step, done, total):
