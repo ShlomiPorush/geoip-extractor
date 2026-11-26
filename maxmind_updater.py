@@ -45,8 +45,10 @@ def download_database(edition_id, license_key, output_dir):
 
             mmdb_file = tar.extractfile(mmdb_member)
             target_path = os.path.join(output_dir, f"{edition_id}.mmdb")
-            with open(target_path, "wb") as out:
+            partial_path = f"{target_path}.partial"
+            with open(partial_path, "wb") as out:
                 shutil.copyfileobj(mmdb_file, out)
+            os.replace(partial_path, target_path)
         logging.info(f"Successfully updated {target_path}")
 
     except Exception as e:
