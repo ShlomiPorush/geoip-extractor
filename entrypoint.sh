@@ -21,5 +21,5 @@ crontab /etc/cron.d/geoip-cron
 echo "$(date '+%Y-%m-%d %H:%M:%S') - Running initial extraction..."
 python /app/script.py >> "$LOG_FILE" 2>&1
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') - Inital run complete. Waiting for next schedule..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') - Initial run complete. Waiting for next schedule..."
 cron && tail -f "$LOG_FILE"
