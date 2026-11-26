@@ -1,4 +1,5 @@
 import geoip2.database
+import maxminddb
 import ipaddress
 import os
 import logging
@@ -20,6 +21,7 @@ MMDB_ASN_FILE = os.path.join(MAXMIND_DIR, "GeoLite2-ASN.mmdb")
 CONFIG_DIR = os.getenv("CONFIG_DIR", "config")
 CONFIG_FILE = os.path.join(CONFIG_DIR, "config.yaml")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output/")
+PROVIDER_OUTPUT_DIR = os.path.join(OUTPUT_DIR, "asn")
 
 # Load configuration
 config = {}
@@ -144,7 +146,37 @@ def main():
                 for name in names:
                     file.write(f"{asn_number} - {name}\n")
 
+    export_providers(current_date)
+
     logging.info("Task completed successfully.")
+
+def export_providers(generated_on):
+    logging.info("Exporting IP ranges per provider (ASN)...")
+    provider_networks = defaultdict(list)
+    provider_names = {}
+
+    with maxminddb.open_database(MMDB_ASN_FILE) as asn_reader:
+        for network, record in asn_reader:
+            if network.version != 4 or not record:
+                continue
+            asn_number = record.get("autonomous_system_number")
+            if asn_number is None:
+                continue
+            provider_networks[asn_number].append(network)
+            provider_names[asn_number] = record.get("autonomous_system_organization") or "Unknown"
+
+    os.makedirs(PROVIDER_OUTPUT_DIR, exist_ok=True)
+    for asn_number, networks in provider_networks.items():
+        collapsed_networks = ipaddress.collapse_addresses(networks)
+        provider_file = os.path.join(PROVIDER_OUTPUT_DIR, f"AS{asn_number}.txt")
+        with open(provider_file, "w", encoding="utf-8") as file:
+            file.write(f"# ASN: {asn_number}\n")
+            file.write(f"# Provider: {provider_names[asn_number]}\n")
+            file.write(f"# Generated on: {generated_on}\n")
+            file.write("# Subnets:\n")
+            file.write("\n".join(map(str, collapsed_networks)) + "\n")
+
+    logging.info(f"Saved {len(provider_networks)} provider files to {PROVIDER_OUTPUT_DIR}")
 
 if __name__ == "__main__":
     main()
