@@ -27,12 +27,13 @@ if os.path.exists(CONFIG_FILE):
     try:
         with open(CONFIG_FILE, "r") as config_file:
             config = yaml.safe_load(config_file) or {}
-    except Exception as e:
-        logging.error(f"Error loading configuration: {e}")
+    except (OSError, yaml.YAMLError) as e:
+        logging.error(f"Cannot read {CONFIG_FILE}: {e}. Fix or remove the file, then run again.")
+        sys.exit(1)
 else:
     logging.info(f"Configuration file {CONFIG_FILE} not found. Using defaults.")
 
-GLOBAL_ASN_BLACKLIST = config.get("global_asn_blacklist", [])
+GLOBAL_ASN_BLACKLIST = config.get("global_asn_blacklist") or []
 if not GLOBAL_ASN_BLACKLIST:
     logging.info("Global ASN blacklist is empty. No filtering will be applied.")
 

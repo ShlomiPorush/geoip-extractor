@@ -1,0 +1,11 @@
+maxmind/*
+config/*
+logs/*
+docker-compose.yml
+docker-compose-dev.yml
+.env
+Dockerfile
+README.md
+.gitignore
+.git
+output
