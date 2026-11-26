@@ -6,6 +6,7 @@
 |---|---|---|
 | `MAXMIND_LICENSE_KEY` | none | MaxMind license key. Without it, the container does not download or update the databases. |
 | `CRON_SCHEDULE` | `0 3 * * 6` | Cron expression for scheduled runs. The default is every Saturday at 03:00. |
+| `RUN_ON_START` | `true` | Run an extraction when the container starts. Set to `false` to wait for the first scheduled run, for example to update the image without rewriting the output files. |
 | `MAXMIND_DIR` | `/app/maxmind` | Directory of `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb`. |
 | `CONFIG_DIR` | `/app/config` | Directory of `config.yaml`. |
 | `OUTPUT_DIR` | `/app/output` | Directory for the output files. |
