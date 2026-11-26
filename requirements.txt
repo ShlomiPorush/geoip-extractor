@@ -1,5 +1,4 @@
 geoip2
 maxminddb
-ipaddress
 pyyaml
 requests

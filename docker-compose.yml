@@ -1,6 +1,6 @@
 services:
   geoip-extractor:
-    image: shlomip/geoip-extractor:latest
+    image: ghcr.io/shlomiporush/geoip-extractor:latest
     env_file:
       - .env
     volumes:
