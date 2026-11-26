@@ -2,6 +2,7 @@ import geoip2.database
 import maxminddb
 import ipaddress
 import os
+import sys
 import logging
 import yaml
 from datetime import datetime
@@ -107,6 +108,15 @@ def main():
         maxmind_updater.update_databases(license_key, MAXMIND_DIR)
     else:
         logging.warning("MAXMIND_LICENSE_KEY not found. Skipping update check.")
+
+    missing_databases = [path for path in (MMDB_COUNTRY_FILE, MMDB_ASN_FILE) if not os.path.exists(path)]
+    if missing_databases:
+        logging.error(
+            f"MaxMind database files are missing: {', '.join(missing_databases)}. "
+            f"Set a valid MAXMIND_LICENSE_KEY so they can be downloaded, or place them in {MAXMIND_DIR}. "
+            "See the messages above for the download result."
+        )
+        sys.exit(1)
 
     current_date = datetime.now().strftime("%d/%m/%Y %H:%M")
     combined_subnets = defaultdict(list)
