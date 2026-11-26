@@ -30,4 +30,4 @@ The blacklist does not apply to the provider files in `asn/`. See the [example c
 
 ## Logs
 
-The container writes each run to `/logs/geoip/geoip_<date>_<time>.log` and shows the log in `docker logs`.
+When the container starts, it creates `/logs/geoip/geoip_<date>_<time>.log`. The first run and every scheduled run write to this file until the container restarts. `docker logs` shows the same lines.
