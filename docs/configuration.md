@@ -12,7 +12,7 @@
 
 ## Database updates
 
-At the start of each run, the container checks both databases. It downloads a database that is missing or older than 7 days. A download that fails keeps the existing file. If a database is still missing after the update step, the run stops with an error.
+When `MAXMIND_LICENSE_KEY` is set, each run starts by checking both databases. The container downloads a database that is missing or older than 7 days. If MaxMind refuses the download or the network fails, the existing file stays. If a database is missing after this step, the run stops with an error.
 
 If you already keep the databases up to date, for example with `geoipupdate`, leave `MAXMIND_LICENSE_KEY` empty and mount the files into `MAXMIND_DIR`.
 

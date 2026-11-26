@@ -50,15 +50,15 @@ You need Docker with Docker Compose and a free [MaxMind license key](https://www
 
 The container downloads the databases, runs the first extraction, and then waits for the next scheduled run. The files appear in `output/`.
 
-To update, run `docker compose pull && docker compose up -d`. To uninstall, run `docker compose down` and delete the directory.
+To update, run `docker compose pull && docker compose up -d`. To uninstall, run `docker compose down`.
 
 ## Common questions
 
 **The log says "MaxMind database files are missing".**
-The container found no database in `/app/maxmind`. Set a valid `MAXMIND_LICENSE_KEY`, or mount your own `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb` files into `/app/maxmind`.
+The error names the missing files. Set a valid `MAXMIND_LICENSE_KEY` so the container downloads them, or mount your own `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb` into `MAXMIND_DIR`, which is `/app/maxmind` by default.
 
 **Why does a provider appear in `output/asn` but not in the country files?**
-The provider is on the global ASN blacklist. The blacklist filters only the country files.
+The country files leave out the providers on the global ASN blacklist. They also sample one address per /24 block, so a small range can be missing from them. The provider files use the exact ranges from the ASN database.
 
 **How do I follow a run?**
 Run `docker logs -f geoip-extractor`. Each of the three steps logs its progress every 10%, and the last line gives the total run time.

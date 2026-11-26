@@ -1,6 +1,6 @@
 # Output files
 
-A run writes these files to `OUTPUT_DIR`. Each run overwrites the files of the previous run. Files of a country or provider that left the database stay in place.
+A run writes these files to `OUTPUT_DIR` and overwrites the files with the same names. A run does not delete files. A country or a provider that a run does not write keeps its old file, for example when it left the database or when the blacklist removes all of its ranges.
 
 | File | Content |
 |---|---|

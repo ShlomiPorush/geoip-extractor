@@ -11,7 +11,7 @@ CRON_SCHEDULE=${CRON_SCHEDULE:-"0 3 * * 6"}
 echo "Starting GeoIP Extractor..."
 echo "CRON Schedule: $CRON_SCHEDULE"
 
-# Without this file and the job sourcing it, cron runs the script without MAXMIND_LICENSE_KEY and the other container variables.
+# cron jobs get the container variables, such as MAXMIND_LICENSE_KEY, only through /etc/environment.
 printenv | grep -v "no_proxy" >> /etc/environment
 
 echo "$CRON_SCHEDULE . /etc/environment; /usr/local/bin/python /app/script.py >> $LOG_FILE 2>&1" > /etc/cron.d/geoip-cron

@@ -43,20 +43,18 @@ def download_database(edition_id, license_key, output_dir):
                 logging.error(f"Could not find .mmdb file in {edition_id} archive.")
                 return
 
+            mmdb_file = tar.extractfile(mmdb_member)
             target_path = os.path.join(output_dir, f"{edition_id}.mmdb")
             with open(target_path, "wb") as out:
-                shutil.copyfileobj(tar.extractfile(mmdb_member), out)
+                shutil.copyfileobj(mmdb_file, out)
         logging.info(f"Successfully updated {target_path}")
 
     except Exception as e:
-        logging.error(f"Error downloading/extracting {edition_id}: {e}")
+        logging.error(f"Error downloading/extracting {edition_id}: {type(e).__name__}")
 
 def update_databases(license_key, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     outdated_editions = [edition_id for edition_id in EDITION_IDS if should_update(os.path.join(output_dir, f"{edition_id}.mmdb"))]
-    if not outdated_editions:
-        logging.info("All databases are up to date.")
-
     for edition_id in outdated_editions:
         download_database(edition_id, license_key, output_dir)
